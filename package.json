@@ -1,12 +1,13 @@
 {
   "name": "clawavatar",
   "productName": "ClawAvatar",
-  "version": "1.0.0",
-  "description": "OpenClaw Avatar Desktop App",
+  "version": "1.0.1",
+  "description": "OpenClaw Avatar Desktop App - 小龙虾虚拟形象桌面应用",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "pack": "electron-builder --dir"
+    "build": "electron-builder",
+    "build:dir": "electron-builder --dir"
   },
   "build": {
     "appId": "com.openclaw.avatar",
@@ -21,7 +22,28 @@
       "entitlements": "build/entitlements.plist",
       "entitlementsInherit": "build/entitlements.plist",
       "hardenedRuntime": false,
-      "gatekeeperAssess": false
+      "gatekeeperAssess": false,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "ClawAvatar",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "asar": false
   }

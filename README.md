@@ -69,6 +69,43 @@ open dist/mac-arm64/ClawAvatar.app
 - **桌面应用**: 双击 `ClawAvatar.app`
 - **浏览器**: 打开 http://127.0.0.1:18790
 
+## 🛠️ 构建安装包
+
+如果需要自行打包 DMG，请执行以下步骤：
+
+### 方式一：直接下载（推荐）
+
+从 [Releases](https://github.com/bxq9200/clawavatar/releases) 页面下载预编译的 DMG 文件
+
+### 方式二：自行打包
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/bxq9200/clawavatar.git
+cd clawavatar
+
+# 2. 安装依赖
+npm install
+
+# 3. 构建 DMG 安装包
+npm run build
+
+# 4. 构建产物在 dist/ 目录下
+ls -la dist/*.dmg
+```
+
+### 自行打包要求
+
+- macOS (Apple Silicon 推荐)
+- Node.js 18+
+- npm
+
+### 安装 DMG
+
+1. 双击下载的 .dmg 文件
+2. 将 ClawAvatar 拖入 Applications 文件夹
+3. 启动时可能需要右键选择"打开"
+
 ## 📖 使用说明
 
 ### 基础功能

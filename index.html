@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw Avatar</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .app-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 40, 0.98) 100%);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    /* 标题栏 */
+    .title-bar {
+      width: 100%;
+      height: 40px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0 10px;
+      -webkit-app-region: drag;
+    }
+
+    .title-bar button {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      margin-left: 8px;
+      -webkit-app-region: no-drag;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .title-bar button:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .title-bar button.active {
+      background: rgba(108, 92, 231, 0.5);
+    }
+
+    .title-bar .close-btn:hover {
+      background: #ff5f57;
+    }
+
+    /* 虚拟形象区域 */
+    .avatar-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .avatar {
+      width: 150px;
+      height: 160px;
+      position: relative;
+      animation: bounce 2s ease-in-out infinite;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .avatar:hover {
+      transform: scale(1.05);
+    }
+
+    .avatar.clicked {
+      animation: shake 0.3s ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+
+    /* 可爱的小龙虾身体 - 圆润可爱版 */
+    .lobster-body {
+      width: 110px;
+      height: 90px;
+      background: linear-gradient(180deg, #ff8a80 0%, #ff5252 50%, #d32f2f 100%);
+      border-radius: 50% 50% 45% 45%;
+      position: absolute;
+      top: 45px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 8px 25px rgba(255, 82, 82, 0.4);
+    }
+
+    /* 头部 - 圆圆的眼睛区域 */
+    .lobster-head {
+      width: 80px;
+      height: 55px;
+      background: linear-gradient(180deg, #ff8a80 0%, #ff5252 100%);
+      border-radius: 50% 50% 45% 45%;
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    /* 大眼睛 - 更可爱 */
+    .lobster-eyes {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 18px;
+    }
+
+    .lobster-eye {
+      width: 22px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.1);
+    }
+
+    .lobster-eye::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle at 30% 30%, #424242, #000);
+      border-radius: 50%;
+      top: 5px;
+      left: 4px;
+    }
+
+    /* 高光 */
+    .lobster-eye::before {
+      content: '';
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: white;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      z-index: 1;
+    }
+
+    /* 触角 - 短短的更可爱 */
+    .lobster-antennae {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+    }
+
+    .antenna {
+      position: absolute;
+      width: 3px;
+      height: 30px;
+      background: #ff5252;
+      border-radius: 2px;
+    }
+
+    .antenna-left {
+      left: 15px;
+      transform: rotate(-25deg);
+      transform-origin: bottom;
+      animation: wiggle 2s ease-in-out infinite;
+    }
+
+    .antenna-right {
+      right: 15px;
+      transform: rotate(25deg);
+      transform-origin: bottom;
+      animation: wiggle 2s ease-in-out infinite 0.5s;
+    }
+
+    /* 嘴巴 - 微笑 */
+    .lobster-mouth {
+      position: absolute;
+      top: 42px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 8px;
+      background: #b71c1c;
+      border-radius: 0 0 10px 10px;
+    }
+
+    /* 腮红 */
+    .lobster-cheeks {
+      position: absolute;
+      top: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .cheek {
+      width: 12px;
+      height: 8px;
+      background: rgba(255, 150, 150, 0.6);
+      border-radius: 50%;
+    }
+
+    /* 螯 - 变得圆润 */
+    .lobster-claws {
+      position: absolute;
+      top: 55px;
+      width: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .claw {
+      position: absolute;
+      width: 30px;
+      height: 35px;
+      background: linear-gradient(180deg, #ff8a80 0%, #ff5252 100%);
+      border-radius: 50% 50% 40% 40%;
+    }
+
+    .claw-left {
+      left: 0;
+    }
+
+    .claw-right {
+      right: 0;
+    }
+
+    /* 钳子 */
+    .claw::before {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 26px;
+      background: linear-gradient(180deg, #ffab91 0%, #ff8a80 100%);
+      border-radius: 50%;
+      top: -12px;
+      left: 4px;
+    }
+
+    /* 尾巴 - 短短的 */
+    .lobster-tail {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 25px;
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+    }
+
+    .tail-segment {
+      flex: 1;
+      max-width: 18px;
+      background: linear-gradient(180deg, #ff5252 0%, #d32f2f 100%);
+      border-radius: 3px;
+    }
+
+    /* 腿 */
+    .lobster-legs {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+    }
+
+    .leg {
+      position: absolute;
+      width: 3px;
+      height: 18px;
+      background: #d32f2f;
+      border-radius: 2px;
+    }
+
+    .leg-left-1 { left: 5px; top: 0; transform: rotate(-25deg); }
+    .leg-left-2 { left: 12px; top: 4px; transform: rotate(-15deg); }
+    .leg-right-1 { right: 5px; top: 0; transform: rotate(25deg); }
+    .leg-right-2 { right: 12px; top: 4px; transform: rotate(15deg); }
+
+    /* ========== 像素风格小龙虾 ========== */
+    .avatar.pixel {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .avatar.pixel .lobster-body {
+      width: 80px;
+      height: 70px;
+      background: linear-gradient(180deg, #ff6b6b 0%, #d32f2f 50%, #b71c1c 100%);
+      border-radius: 8px;
+      box-shadow: none;
+      /* 像素化边缘 */
+      border: 4px solid #b71c1c;
+    }
+
+    .avatar.pixel .lobster-head {
+      width: 60px;
+      height: 45px;
+      background: linear-gradient(180deg, #ff6b6b 0%, #d32f2f 100%);
+      border-radius: 8px 8px 4px 4px;
+      border: 4px solid #b71c1c;
+    }
+
+    .avatar.pixel .lobster-eyes {
+      top: 12px;
+      gap: 12px;
+    }
+
+    .avatar.pixel .lobster-eye {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #333;
+    }
+
+    .avatar.pixel .lobster-eye::after {
+      width: 8px;
+      height: 8px;
+      top: 3px;
+      left: 3px;
+    }
+
+    .avatar.pixel .lobster-eye::before {
+      width: 3px;
+      height: 3px;
+      top: 2px;
+      left: 2px;
+    }
+
+    .avatar.pixel .lobster-antennae {
+      top: -15px;
+      width: 50px;
+    }
+
+    .avatar.pixel .antenna {
+      width: 3px;
+      height: 25px;
+    }
+
+    .avatar.pixel .lobster-mouth {
+      top: 28px;
+      width: 12px;
+      height: 6px;
+      border-radius: 0;
+    }
+
+    .avatar.pixel .lobster-cheeks {
+      top: 18px;
+      width: 40px;
+    }
+
+    .avatar.pixel .cheek {
+      width: 8px;
+      height: 5px;
+    }
+
+    .avatar.pixel .lobster-claws {
+      top: 40px;
+      width: 90px;
+    }
+
+    .avatar.pixel .claw {
+      width: 24px;
+      height: 28px;
+      border-radius: 4px;
+      border: 3px solid #b71c1c;
+    }
+
+    .avatar.pixel .claw::before {
+      width: 16px;
+      height: 18px;
+      top: -10px;
+      left: 4px;
+      border-radius: 4px;
+      border: 2px solid #b71c1c;
+    }
+
+    .avatar.pixel .lobster-tail {
+      bottom: 8px;
+      width: 40px;
+      height: 20px;
+    }
+
+    .avatar.pixel .tail-segment {
+      border: 2px solid #b71c1c;
+    }
+
+    .avatar.pixel .lobster-legs {
+      bottom: 15px;
+      width: 60px;
+    }
+
+    .avatar.pixel .leg {
+      width: 3px;
+      height: 15px;
+    }
+
+    /* 像素风格说话动画 */
+    .avatar.pixel.speaking {
+      animation: pixel-bounce 0.3s ease-in-out infinite;
+    }
+
+    @keyframes pixel-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .avatar.pixel.speaking .lobster-mouth {
+      height: 8px;
+      animation: pixel-talk 0.15s ease-in-out infinite;
+    }
+
+    @keyframes pixel-talk {
+      0%, 100% { transform: translateX(-50%) scaleY(1); }
+      50% { transform: translateX(-50%) scaleY(1.5); }
+    }
+
+    /* ========== 科技风小龙虾 ========== */
+    .avatar.tech {
+      filter: drop-shadow(0 0 10px #00ffff) drop-shadow(0 0 20px #00ffff);
+    }
+
+    .avatar.tech .lobster-body {
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border: 2px solid #00ffff;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.2);
+    }
+
+    .avatar.tech .lobster-head {
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #00ffff;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .avatar.tech .lobster-eye {
+      background: #00ffff;
+      box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    }
+
+    .avatar.tech .lobster-eye::after {
+      background: #000;
+      box-shadow: 0 0 5px #00ffff;
+    }
+
+    .avatar.tech .lobster-antennae .antenna {
+      background: #00ffff;
+      box-shadow: 0 0 5px #00ffff;
+    }
+
+    .avatar.tech .lobster-mouth {
+      background: #00ffff;
+      box-shadow: 0 0 10px #00ffff;
+    }
+
+    .avatar.tech .lobster-claws .claw {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #00ffff;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .avatar.tech .lobster-claws .claw::before {
+      background: linear-gradient(135deg, #00ffff 0%, #0088aa 100%);
+      box-shadow: 0 0 10px #00ffff;
+    }
+
+    .avatar.tech .lobster-tail .tail-segment {
+      background: linear-gradient(180deg, #1a1a2e 0%, #0f3460 100%);
+      border: 2px solid #00ffff;
+    }
+
+    .avatar.tech .lobster-legs .leg {
+      background: #00ffff;
+      box-shadow: 0 0 5px #00ffff;
+    }
+
+    /* 科技风说话动画 */
+    .avatar.tech.speaking {
+      animation: tech-pulse 0.5s ease-in-out infinite;
+    }
+
+    @keyframes tech-pulse {
+      0%, 100% { 
+        filter: drop-shadow(0 0 10px #00ffff) drop-shadow(0 0 20px #00ffff);
+        transform: translateY(0);
+      }
+      50% { 
+        filter: drop-shadow(0 0 20px #00ffff) drop-shadow(0 0 40px #00ffff);
+        transform: translateY(-5px);
+      }
+    }
+
+    .avatar.tech.speaking .lobster-mouth {
+      background: #00ffff;
+      box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+    }
+
+    /* 说话时的动画 */
+    .avatar.speaking {
+      animation: bounce 0.5s ease-in-out infinite;
+    }
+
+    .avatar.speaking .lobster-mouth {
+      height: 12px;
+      animation: talk 0.2s ease-in-out infinite;
+    }
+
+    @keyframes talk {
+      0%, 100% { transform: translateX(-50%) scaleY(1); }
+      50% { transform: translateX(-50%) scaleY(1.5); }
+    }
+
+    /* 触角 */
+    .lobster-antennae {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+    }
+
+    .antenna {
+      position: absolute;
+      width: 4px;
+      height: 50px;
+      background: #ff6b6b;
+      border-radius: 2px;
+    }
+
+    .antenna-left {
+      left: 10px;
+      transform: rotate(-30deg);
+      transform-origin: bottom;
+      animation: wiggle 2s ease-in-out infinite;
+    }
+
+    .antenna-right {
+      right: 10px;
+      transform: rotate(30deg);
+      transform-origin: bottom;
+      animation: wiggle 2s ease-in-out infinite 0.5s;
+    }
+
+    .antenna::before {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #ff6b6b;
+      border-radius: 50%;
+      top: -6px;
+      left: -2px;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-30deg); }
+      50% { transform: rotate(-20deg); }
+    }
+
+    /* 嘴巴 */
+    .lobster-mouth {
+      position: absolute;
+      top: 45px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 10px;
+      background: #cc4444;
+      border-radius: 50%;
+    }
+
+    /* 螯 */
+    .lobster-claws {
+      position: absolute;
+      top: 60px;
+      width: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .claw {
+      position: absolute;
+      width: 35px;
+      height: 40px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      border-radius: 40% 40% 30% 30%;
+    }
+
+    .claw-left {
+      left: 0;
+    }
+
+    .claw-right {
+      right: 0;
+    }
+
+    .claw::before {
+      content: '';
+      position: absolute;
+      width: 25px;
+      height: 30px;
+      background: linear-gradient(135deg, #ff8585 0%, #ff6b6b 100%);
+      border-radius: 50% 50% 40% 40%;
+      top: -15px;
+      left: 5px;
+    }
+
+    /* 尾巴 */
+    .lobster-tail {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 30px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .tail-segment {
+      flex: 1;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      border-radius: 3px;
+    }
+
+    .tail-segment:nth-child(1) { width: 25px; }
+    .tail-segment:nth-child(2) { width: 22px; }
+    .tail-segment:nth-child(3) { width: 18px; }
+
+    /* 腿 */
+    .lobster-legs {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+    }
+
+    .leg {
+      position: absolute;
+      width: 4px;
+      height: 25px;
+      background: #cc4444;
+      border-radius: 2px;
+    }
+
+    .leg-left-1 { left: 5px; top: 0; transform: rotate(-20deg); }
+    .leg-left-2 { left: 12px; top: 5px; transform: rotate(-15deg); }
+    .leg-right-1 { right: 5px; top: 0; transform: rotate(20deg); }
+    .leg-right-2 { right: 12px; top: 5px; transform: rotate(15deg); }
+      border-radius: 50%;
+      top: -12px;
+      left: -4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    /* 说话时的动画 */
+    .avatar.speaking .avatar-mouth {
+      height: 20px;
+      animation: speak 0.2s ease-in-out infinite;
+    }
+
+    @keyframes speak {
+      0%, 100% { transform: translateX(-50%) scaleY(1); }
+      50% { transform: translateX(-50%) scaleY(1.3); }
+    }
+
+    /* 思考时的动画 */
+    .avatar.thinking {
+      animation: think 2s ease-in-out infinite;
+    }
+
+    @keyframes think {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* 状态文字 */
+    .status {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+      margin-top: 20px;
+      padding: 8px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+    }
+
+    /* 聊天区域 */
+    .chat-area {
+      width: 100%;
+      height: 150px;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 8px 12px;
+      border-radius: 15px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.avatar {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      align-self: flex-start;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .input-area input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .input-area button {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 50%;
+      background: #6c5ce7;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.2s;
+    }
+
+    .input-area button:hover {
+      transform: scale(1.1);
+    }
+
+    .input-area button.recording {
+      background: #ff5f57;
+      animation: pulse-record 1s infinite;
+    }
+
+    /* 声音选择器 */
+    .voice-selector {
+      padding: 5px 10px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .voice-selector select {
+      width: 100%;
+      padding: 5px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 12px;
+    }
+
+    .voice-selector select option {
+      background: #1a1a2e;
+    }
+
+    @keyframes pulse-record {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 标题栏 -->
+    <div class="title-bar">
+      <button id="speakToggleBtn" title="语音播报开关" class="active">🔊</button>
+      <button id="avatarToggleBtn" title="切换形象">🦞</button>
+      <button class="close-btn" id="closeBtn">✕</button>
+      <button id="minimizeBtn">−</button>
+    </div>
+
+    <!-- 虚拟形象 -->
+    <div class="avatar-container">
+      <div class="avatar" id="avatar">
+        <div class="lobster-antennae">
+          <div class="antenna antenna-left"></div>
+          <div class="antenna antenna-right"></div>
+        </div>
+        <div class="lobster-head">
+          <div class="lobster-eyes">
+            <div class="lobster-eye"></div>
+            <div class="lobster-eye"></div>
+          </div>
+          <div class="lobster-cheeks">
+            <div class="cheek"></div>
+            <div class="cheek"></div>
+          </div>
+          <div class="lobster-mouth"></div>
+        </div>
+        <div class="lobster-body">
+          <div class="lobster-claws">
+            <div class="claw claw-left"></div>
+            <div class="claw claw-right"></div>
+          </div>
+        </div>
+        <div class="lobster-tail">
+          <div class="tail-segment"></div>
+          <div class="tail-segment"></div>
+          <div class="tail-segment"></div>
+        </div>
+        <div class="lobster-legs">
+          <div class="leg leg-left-1"></div>
+          <div class="leg leg-left-2"></div>
+          <div class="leg leg-right-1"></div>
+          <div class="leg leg-right-2"></div>
+        </div>
+      </div>
+      <div class="status" id="status">您好！我是 ClawAvatar</div>
+    </div>
+
+    <!-- 聊天区域 -->
+    <div class="chat-area">
+      <div class="messages" id="messages">
+        <div class="message avatar">你好！我是你的虚拟形象，可以和你聊天~</div>
+      </div>
+      <div class="input-area">
+        <input type="text" id="messageInput" placeholder="输入消息...">
+        <button id="micBtn">🎤</button>
+        <button id="sendBtn">➤</button>
+        <button id="voiceBtn" title="切换声音">👤</button>
+      </div>
+      <div class="voice-selector" id="voiceSelector" style="display:none;">
+        <select id="voiceSelect">
+          <option value="">加载中...</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 检测是否在 Electron 环境中
+    const isElectron = typeof window !== 'undefined' && window.process && window.process.type;
+    const ipcRenderer = isElectron ? require('electron').ipcRenderer : null;
+    
+    // DOM 元素
+    const avatar = document.getElementById('avatar');
+    const status = document.getElementById('status');
+    const messages = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const speakToggleBtn = document.getElementById('speakToggleBtn');
+    const avatarToggleBtn = document.getElementById('avatarToggleBtn');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const voiceSelector = document.getElementById('voiceSelector');
+    const closeBtn = document.getElementById('closeBtn');
+    const minimizeBtn = document.getElementById('minimizeBtn');
+
+    // 窗口控制 (Electron 模式下有效)
+    if (ipcRenderer) {
+      closeBtn.addEventListener('click', () => ipcRenderer.send('window-close'));
+      minimizeBtn.addEventListener('click', () => ipcRenderer.send('window-minimize'));
+    } else {
+      // 浏览器模式下隐藏按钮
+      closeBtn.style.display = 'none';
+      minimizeBtn.style.display = 'none';
+    }
+
+    // 点击小龙虾互动
+    let clickCount = 0;
+    avatar.addEventListener('click', () => {
+      clickCount++;
+      avatar.classList.add('clicked');
+      
+      // 不同的点击反馈
+      if (clickCount % 5 === 0) {
+        status.textContent = '哎呀好痒！😂';
+        speak('哎呀好痒！');
+      } else if (clickCount % 3 === 0) {
+        status.textContent = '再摸就要长不好了！😳';
+        speak('不要一直摸我啦');
+      } else if (clickCount % 2 === 0) {
+        status.textContent = '更喜欢我了吗？🥰';
+        speak('更喜欢我了吗？');
+      } else {
+        status.textContent = '你好呀！🎵';
+        speak('你好呀！');
+      }
+      
+      setTimeout(() => {
+        avatar.classList.remove('clicked');
+        status.textContent = '您好！我是 ClawAvatar 🦞';
+      }, 1500);
+    });
+
+    // 麦克风按钮 - 使用服务器端 Whisper 识别
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let currentStream = null;
+    
+    micBtn.addEventListener('click', () => {
+      if (isRecording) {
+        // 停止录音
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+          currentStream = null;
+        }
+        status.textContent = '正在识别...';
+      } else {
+        // 开始录音
+        startServerRecording();
+      }
+    });
+    
+    async function startServerRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            sampleRate: 16000,
+            channelCount: 1,
+            echoCancellation: true
+          } 
+        });
+        
+        currentStream = stream;
+        isRecording = true;
+        micBtn.classList.add('recording');
+        status.textContent = '🎤 录音中，点击停止...';
+        
+        let mimeType = 'audio/wav';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/webm';
+        }
+        
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+        
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: mimeType });
+          
+          // 重置按钮状态
+          isRecording = false;
+          micBtn.classList.remove('recording');
+          
+          if (audioBlob.size > 100) {
+            status.textContent = '正在识别...';
+            
+            try {
+              const response = await fetch(`${API_BASE}/stt`, {
+                method: 'POST',
+                headers: { 'Content-Type': mimeType },
+                body: audioBlob
+              });
+              
+              const data = await response.json();
+              
+              if (data.text) {
+                messageInput.value = data.text;
+                sendMessage();
+              } else if (data.error) {
+                addMessage('识别失败: ' + data.error, 'avatar');
+              }
+            } catch (err) {
+              addMessage('识别请求失败', 'avatar');
+            }
+          }
+          
+          status.textContent = '您好！我是 ClawAvatar 🦞';
+        };
+        
+        mediaRecorder.start(100);
+        
+      } catch (err) {
+        console.error('Mic error:', err);
+        addMessage('无法访问麦克风: ' + err.message, 'avatar');
+        isRecording = false;
+        micBtn.classList.remove('recording');
+      }
+    }
+
+    // 简单的 HTTP API 连接
+    // 使用相对路径或固定端口
+    const API_PORT = 18790;
+    const API_BASE = `http://127.0.0.1:${API_PORT}`;
+    
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      messageInput.value = '';
+      
+      // 保存聊天记录
+      saveChatHistory();
+      
+      avatar.classList.add('speaking');
+      status.textContent = '正在思考...';
+      
+      // 调用本地 API
+      fetch(`${API_BASE}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      })
+      .then(res => res.json())
+      .then(data => {
+        // 立即显示文字
+        addMessage(data.reply, 'avatar');
+        saveChatHistory();
+        
+        // 同时开始合成语音（并行）
+        speak(data.reply);
+        
+        status.textContent = '您好！我是 ClawAvatar 🦞';
+      })
+      .catch(err => {
+        addMessage('连接失败', 'avatar');
+        status.textContent = '连接失败';
+      })
+      .finally(() => {
+        // 不要在这里移除 speaking，语音结束时会移除
+      });
+    }
+
+    // 添加消息
+    function addMessage(text, sender) {
+      const div = document.createElement('div');
+      div.className = `message ${sender}`;
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // 保存聊天记录
+
+    // 保存聊天记录
+    function saveChatHistory() {
+      const chatData = {
+        messages: Array.from(document.querySelectorAll('.message')).map(m => ({
+          text: m.textContent,
+          sender: m.classList.contains('user') ? 'user' : 'avatar'
+        })),
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('openclaw_avatar_history', JSON.stringify(chatData));
+    }
+
+    // 加载聊天记录
+    function loadChatHistory() {
+      const saved = localStorage.getItem('openclaw_avatar_history');
+      if (saved) {
+        const data = JSON.parse(saved);
+        messages.innerHTML = '';
+        data.messages.forEach(m => addMessage(m.text, m.sender));
+      }
+    }
+    
+    // 启动时加载历史记录
+    loadChatHistory();
+    
+    // 加载可用的声音列表
+    let availableVoices = {};
+    
+    function loadVoices() {
+      fetch(`${API_BASE}/voices`)
+        .then(res => res.json())
+        .then(voices => {
+          availableVoices = voices;
+          voiceSelect.innerHTML = '';
+          Object.entries(voices).forEach(([key, name]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = name;
+            voiceSelect.appendChild(option);
+          });
+        })
+        .catch(err => console.error('Failed to load voices:', err));
+    }
+    
+    // 启动时加载声音列表
+    loadVoices();
+    
+    // 声音切换按钮
+    voiceBtn.addEventListener('click', () => {
+      if (voiceSelector.style.display === 'none') {
+        voiceSelector.style.display = 'block';
+      } else {
+        voiceSelector.style.display = 'none';
+      }
+    });
+    
+    // 选择声音
+    voiceSelect.addEventListener('change', () => {
+      const voice = voiceSelect.value;
+      fetch(`${API_BASE}/setVoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voice })
+      })
+      .then(res => res.json())
+      .then(data => {
+        voiceSelector.style.display = 'none';
+      })
+      .catch(err => console.error('Failed to set voice:', err));
+    });
+    
+    // 页面加载完成
+    status.textContent = '您好！我是 ClawAvatar 🦞';
+
+    // 语音合成 - 使用 Edge TTS
+    let currentAudio = null;
+    let currentAudioUrl = null;
+    let speakEnabled = true; // 语音播报开关，默认开启
+    
+    // 语音播报开关按钮
+    speakToggleBtn.addEventListener('click', () => {
+      speakEnabled = !speakEnabled;
+      if (speakEnabled) {
+        speakToggleBtn.textContent = '🔊';
+        speakToggleBtn.classList.add('active');
+        speakToggleBtn.title = '语音播报：开启';
+      } else {
+        speakToggleBtn.textContent = '🔇';
+        speakToggleBtn.classList.remove('active');
+        speakToggleBtn.title = '语音播报：关闭';
+      }
+    });
+    // 初始化标题
+    speakToggleBtn.title = '语音播报：开启';
+    
+    // 头像切换功能
+    // 0 = 可爱风格, 1 = 像素风格, 2 = 科技风格
+    let avatarStyle = 0;
+    const styleNames = ['可爱', '像素', '科技'];
+    const styleIcons = ['🦞', '🎨', '⚡'];
+    
+    avatarToggleBtn.addEventListener('click', () => {
+      avatarStyle = (avatarStyle + 1) % 3;
+      
+      // 移除所有样式
+      avatar.classList.remove('pixel', 'tech');
+      
+      // 添加新样式
+      if (avatarStyle === 1) {
+        avatar.classList.add('pixel');
+      } else if (avatarStyle === 2) {
+        avatar.classList.add('tech');
+      }
+      
+      avatarToggleBtn.textContent = styleIcons[avatarStyle];
+      avatarToggleBtn.title = '切换形象：' + styleNames[avatarStyle];
+    });
+    
+    function speak(text) {
+      // 检查语音播报开关
+      if (!speakEnabled) {
+        return;
+      }
+      
+      // 停止之前的语音
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      // 释放之前的 URL
+      if (currentAudioUrl) {
+        URL.revokeObjectURL(currentAudioUrl);
+        currentAudioUrl = null;
+      }
+      
+      status.textContent = '正在说话...';
+      
+      // 添加时间戳防止缓存
+      const url = `${API_BASE}/tts`;
+      
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.blob();
+      })
+      .then(blob => {
+        console.log('Got audio blob:', blob.size);
+        const audioUrl = URL.createObjectURL(blob);
+        currentAudioUrl = audioUrl;
+        currentAudio = new Audio(audioUrl);
+        
+        currentAudio.onerror = (e) => {
+          console.error('Audio error:', e);
+          status.textContent = '播放失败';
+        };
+        
+        // 尝试播放，如果失败则使用 SpeechSynthesis 备用
+        const playPromise = currentAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.log('Audio play failed, using SpeechSynthesis:', err);
+            // 备用：使用浏览器语音合成
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            window.speechSynthesis.speak(utterance);
+          });
+        }
+        
+        avatar.classList.add('speaking');
+        
+        currentAudio.onended = () => {
+          avatar.classList.remove('speaking');
+          status.textContent = '您好！我是 ClawAvatar 🦞';
+          currentAudio = null;
+          currentAudioUrl = null;
+          URL.revokeObjectURL(audioUrl);
+        };
+      })
+      .catch(err => {
+        console.error('TTS error:', err);
+        status.textContent = '您好！我是 ClawAvatar 🦞';
+      });
+    }
+
+    // 发送按钮
+    sendBtn.addEventListener('click', sendMessage);
+    
+    // 回车发送
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>

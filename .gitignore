@@ -1,0 +1,30 @@
+# 依赖
+node_modules/
+*.egg-info/
+
+# 日志
+*.log
+/tmp/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# 临时文件
+*.swp
+*.swo
+
+# 打包文件
+dist/
+build/
+
+# 测试
+__pycache__/
+*.pyc
+
+# 环境
+.env
+.env.local
+
+# Whisper 模型缓存
+.cache/whisper/
